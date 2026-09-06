@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="430" viewBox="0 0 1280 430" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">NotchFree — Your Mac. A little more.</title>
+  <desc id="desc">A dark NotchFree banner with mint lettering and the app's notch-shaped icon.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1280" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#161b19"/><stop offset="1" stop-color="#090b0a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(1015 215) rotate(90) scale(320 410)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c1e8b5" stop-opacity=".12"/><stop offset="1" stop-color="#c1e8b5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="icon" x1="855" y1="91" x2="1135" y2="370" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#303330"/><stop offset="1" stop-color="#101210"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="430" rx="28" fill="url(#background)"/>
+  <rect width="1280" height="430" rx="28" fill="url(#glow)"/>
+  <rect x=".5" y=".5" width="1279" height="429" rx="27.5" stroke="#ffffff" stroke-opacity=".08"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <circle cx="74" cy="65" r="4" fill="#c1e8b5"/>
+    <text x="90" y="71" fill="#e4e9e2" font-size="18" font-weight="600" letter-spacing="3.3">NOTCHFREE</text>
+    <text x="68" y="175" fill="#f6f7f3" font-size="76" font-weight="650" letter-spacing="-3.5">Your Mac.</text>
+    <text x="68" y="259" fill="#c1e8b5" font-size="76" font-weight="650" letter-spacing="-3.5">A little more.</text>
+    <text x="72" y="308" fill="#a8b0a7" font-size="21">A quiet home for the things you reach for.</text>
+    <text x="72" y="379" fill="#d2d9ce" font-size="13" font-weight="500" letter-spacing="2.1">NATIVE TO MAC</text>
+    <circle cx="221" cy="374" r="2" fill="#667361"/>
+    <text x="242" y="379" fill="#d2d9ce" font-size="13" font-weight="500" letter-spacing="2.1">FREE &amp; OPEN SOURCE</text>
+  </g>
+  <rect x="856" y="88" width="280" height="280" rx="65" fill="#000" fill-opacity=".18"/>
+  <rect x="856" y="76" width="280" height="280" rx="65" fill="url(#icon)" stroke="#ffffff" stroke-opacity=".09"/>
+  <rect x="895" y="148" width="202" height="145" rx="40" fill="#c1e8b5"/>
+  <rect x="948" y="139" width="96" height="63" rx="24" fill="#000"/>
+  <rect x="919" y="234" width="26" height="29" rx="9" fill="#000"/>
+  <g stroke="#000" stroke-width="4.5" stroke-linecap="round">
+    <path d="M1033 243v13"/><path d="M1042 237v25"/><path d="M1051 232v35"/><path d="M1060 239v21"/>
+  </g>
+</svg>
