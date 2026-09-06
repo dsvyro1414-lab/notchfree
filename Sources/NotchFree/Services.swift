@@ -40,6 +40,11 @@ enum CommandRunner {
     private var process: Process?
     private var poll: Task<Void, Never>?
     private var generation = 0
+    private var artworkState = MediaArtworkState()
+    private let artworkCache = MediaArtworkCache()
+    private var artworkTask: Task<Void, Never>?
+    private var artworkAttempt = 0
+    private var retryArtworkAt = Date.distantPast
     private var scriptURL: URL? { Bundle.main.resourceURL?.appendingPathComponent("mediaremote-adapter.pl") }
     private var frameworkURL: URL? { Bundle.main.privateFrameworksURL?.appendingPathComponent("MediaRemoteAdapter.framework") }
     func start() {
@@ -77,18 +82,27 @@ enum CommandRunner {
                 Task { @MainActor [weak self] in
                     guard let self, self.generation == token else { return }
                     self.status = "Now Playing disconnected. Retry or select Apple Music / Spotify."
-                    self.snapshot = MediaSnapshot()
+                    self.receive(MediaSnapshot())
                 }
             }
         } catch { status = error.localizedDescription }
     }
     private func receive(_ value: MediaSnapshot) {
-        let changed = value.available && value.title != snapshot.title
-        snapshot = value
-        if changed { onTrackChanged?(value) }
+        let previousRequest = artworkState.request
+        let changed = value.available && (!snapshot.available || value.identity != snapshot.identity)
+        artworkState.update(value)
+        if previousRequest != artworkState.request {
+            artworkTask?.cancel(); artworkTask = nil
+            artworkAttempt = 0; retryArtworkAt = .distantPast
+        }
+        snapshot = artworkState.snapshot
+        if changed { onTrackChanged?(snapshot) }
     }
     func stop() {
         generation += 1; poll?.cancel(); poll = nil
+        artworkTask?.cancel(); artworkTask = nil
+        artworkState.reset(); snapshot = artworkState.snapshot
+        artworkAttempt = 0; retryArtworkAt = .distantPast
         if process?.isRunning == true { process?.terminate() }; process = nil
     }
     func send(_ command: Int) {
@@ -117,47 +131,56 @@ enum CommandRunner {
     }
     private func startFallback() {
         status = "Automation access is needed for this player."
-        let id = source == .music ? "com.apple.Music" : "com.spotify.client"
+        let selectedSource = source, token = generation
+        let id = selectedSource == .music ? "com.apple.Music" : "com.spotify.client"
         poll = Task { [weak self] in
             while !Task.isCancelled {
-                guard let self else { return }
+                guard let self, self.generation == token else { return }
                 if NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty {
-                    self.snapshot = MediaSnapshot(); self.status = "Open \(self.source.rawValue) to start listening."
+                    self.receive(MediaSnapshot()); self.status = "Open \(selectedSource.rawValue) to start listening."
                 } else {
                     do {
-                        let result = try await Self.appleScript("""
-                        tell application id "\(id)"
-                            if player state is stopped then return ""
-                            set sep to ASCII character 31
-                            return (name of current track as text) & sep & (artist of current track as text) & sep & (album of current track as text) & sep & (duration of current track as text) & sep & (player position as text) & sep & (player state as text)
-                        end tell
-                        """)
-                        guard !Task.isCancelled else { return }
-                        let fields = result.components(separatedBy: "\u{1f}")
-                        if fields.count == 6 {
-                            var item = MediaSnapshot()
-                            item.title = fields[0]; item.artist = fields[1]; item.album = fields[2]; item.bundleID = id
-                            item.duration = (Double(fields[3]) ?? 0) / (self.source == .spotify ? 1000 : 1)
-                            item.elapsed = Double(fields[4]) ?? 0; item.playing = fields[5] == "playing"
-                            item.timestamp = Date(); item.artwork = self.snapshot.title == item.title ? self.snapshot.artwork : nil
-                            self.receive(item); self.status = "Connected to \(self.source.rawValue)"
-                        } else { self.snapshot = MediaSnapshot() }
-                    } catch { self.status = "Automation access unavailable. Enable it in System Settings." }
+                        let metadata = try await PlayerAutomation.metadata(spotify: selectedSource == .spotify)
+                        guard !Task.isCancelled, self.generation == token else { return }
+                        self.receive(metadata.snapshot)
+                        self.loadArtworkIfNeeded(spotifyURL: metadata.artworkURL)
+                        self.status = "Connected to \(selectedSource.rawValue)"
+                    } catch {
+                        guard !Task.isCancelled, self.generation == token else { return }
+                        self.receive(MediaSnapshot())
+                        self.status = "Automation access unavailable. Enable it in System Settings."
+                    }
                 }
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
     }
-    nonisolated static func appleScript(_ source: String) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                var error: NSDictionary?
-                let result = NSAppleScript(source: source)?.executeAndReturnError(&error)
-                if let error { continuation.resume(throwing: NSError(domain: "Automation", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: error[NSAppleScript.errorMessage] as? String ?? "Automation failed"])) }
-                else { continuation.resume(returning: result?.stringValue ?? "") }
+    private func loadArtworkIfNeeded(spotifyURL: String) {
+        guard snapshot.artwork == nil, let request = artworkState.request else { return }
+        if let cached = artworkCache.image(for: request.identity) {
+            artworkState.apply(cached, for: request); snapshot = artworkState.snapshot
+            return
+        }
+        guard artworkTask == nil, Date() >= retryArtworkAt else { return }
+        let expected = snapshot, scriptURL = self.scriptURL, frameworkURL = self.frameworkURL
+        artworkTask = Task { [weak self] in
+            let data = await MediaArtworkLoader.load(for: expected, spotifyURL: spotifyURL,
+                                                    scriptURL: scriptURL, frameworkURL: frameworkURL)
+            guard !Task.isCancelled, let self, self.artworkState.accepts(request) else { return }
+            self.artworkTask = nil
+            if let data, self.artworkState.apply(data, for: request) {
+                self.artworkCache.insert(data, for: request.identity)
+                self.snapshot = self.artworkState.snapshot
+            } else {
+                // Artwork often arrives after the title. Retry without refetching it
+                // on every playback-position update or permanently caching a miss.
+                self.artworkAttempt = min(self.artworkAttempt + 1, 5)
+                self.retryArtworkAt = Date().addingTimeInterval(min(30, pow(2, Double(self.artworkAttempt))))
             }
         }
+    }
+    nonisolated static func appleScript(_ source: String) async throws -> String {
+        try await PlayerAutomation.string(source)
     }
 }
 

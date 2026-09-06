@@ -191,6 +191,7 @@ public struct MediaSnapshot: Equatable, Sendable {
     public var artist = ""
     public var album = ""
     public var bundleID = ""
+    public var trackID = ""
     public var playing = false
     public var duration: Double = 0
     public var elapsed: Double = 0
@@ -198,6 +199,17 @@ public struct MediaSnapshot: Equatable, Sendable {
     public var artwork: Data?
     public init() {}
     public var available: Bool { !title.isEmpty }
+    public var identity: MediaIdentity {
+        MediaIdentity(bundleID: bundleID, trackID: trackID,
+                      title: title, artist: artist, album: album)
+    }
+    /// System and direct player IDs use different namespaces. Require matching
+    /// source and metadata before accepting artwork from the system adapter.
+    public func matchesSystemTrack(_ other: MediaSnapshot) -> Bool {
+        available && other.available && !bundleID.isEmpty && bundleID == other.bundleID
+            && title == other.title && artist == other.artist && album == other.album
+            && duration > 0 && other.duration > 0 && abs(duration - other.duration) < 2
+    }
     public func position(at now: Date) -> Double {
         let time = max(0, elapsed + (playing ? now.timeIntervalSince(timestamp) : 0))
         return duration > 0 ? min(duration, time) : time
@@ -210,6 +222,9 @@ public struct MediaSnapshot: Equatable, Sendable {
         result.artist = payload["artist"] as? String ?? ""
         result.album = payload["album"] as? String ?? ""
         result.bundleID = payload["bundleIdentifier"] as? String ?? ""
+        result.trackID = [payload["contentItemIdentifier"], payload["uniqueIdentifier"]]
+            .compactMap { ($0 as? String) ?? ($0 as? NSNumber)?.stringValue }
+            .first(where: { !$0.isEmpty }) ?? ""
         result.playing = payload["playing"] as? Bool ?? false
         result.duration = (payload["durationMicros"] as? Double ?? 0) / 1_000_000
         result.elapsed = (payload["elapsedTimeMicros"] as? Double ?? 0) / 1_000_000

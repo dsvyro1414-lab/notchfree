@@ -92,6 +92,7 @@ import ServiceManagement
     @Published var settingsRevision = 0
     @Published var selectedWidget: WidgetKind = .media
     let media = MediaProvider()
+    let appearance = AppearancePreferences()
     let calendar = CalendarProvider()
     let camera = CameraProvider()
     let shortcuts = ShortcutProvider()

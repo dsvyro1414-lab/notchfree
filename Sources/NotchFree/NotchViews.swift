@@ -3,8 +3,6 @@ import AppKit
 import NotchFreeCore
 import EventKit
 
-let nookAccent = Color(red: 0.72, green: 0.91, blue: 0.67)
-
 private struct PanelReveal: ViewModifier {
     var progress: CGFloat
     func body(content: Content) -> some View {
@@ -60,6 +58,7 @@ struct AlbumArt: View {
 }
 
 struct PlaybackBars: View {
+    @Environment(\.nookAccent) private var nookAccent
     var playing: Bool
     @Environment(\.accessibilityReduceMotion) private var reduced
     var body: some View {
@@ -75,6 +74,7 @@ struct PlaybackBars: View {
 }
 
 struct NotchRootView: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @ObservedObject private var media: MediaProvider
     @ObservedObject private var shelf: ShelfStore
@@ -87,9 +87,9 @@ struct NotchRootView: View {
     }
     var expanded: Bool { model.presentation.expanded }
     var activity: Activity? { model.presentation.visibleActivity }
-    var hasCompact: Bool { media.snapshot.available || model.library.timer.isRunning || !shelf.items.isEmpty }
-    var width: CGFloat { min(availableWidth, expanded ? model.panelWidth : activity != nil ? max(geometry.width + 130, 360) : geometry.width + (hasCompact ? 104 : 0)) }
-    var height: CGFloat { geometry.height + (expanded ? 272 : activity != nil ? 48 : 3) }
+    var size: PanelSize { model.panelSize(geometry: geometry, availableWidth: availableWidth - PanelMetrics.shadowGutter) }
+    var width: CGFloat { size.width }
+    var height: CGFloat { size.height }
     var motion: Animation { reduced ? .easeOut(duration: 0.12) : .spring(response: expanded ? 0.4 : 0.3, dampingFraction: 0.82) }
     var body: some View {
         VStack(spacing: 0) {
@@ -97,7 +97,7 @@ struct NotchRootView: View {
             if expanded {
                 expandedContent
                     .transition(reduced ? .opacity : .modifier(active: PanelReveal(progress: 0), identity: PanelReveal(progress: 1)))
-                    .padding(.horizontal, 28).padding(.bottom, 18)
+                    .padding(.horizontal, 28).padding(.bottom, PanelMetrics.bottomPadding)
             } else if let activity {
                 HStack(spacing: 10) {
                     if let level = activity.level {
@@ -125,7 +125,7 @@ struct NotchRootView: View {
         .animation(motion, value: expanded).animation(motion, value: width).animation(motion, value: height)
         .animation(.easeOut(duration: 0.2), value: model.presentation.tab)
         .foregroundStyle(.white).preferredColorScheme(.dark)
-        .frame(width: availableWidth, height: 370, alignment: .top)
+        .frame(width: availableWidth, height: PanelMetrics.envelopeHeight(notchHeight: geometry.height), alignment: .top)
     }
     private var topStrip: some View {
         HStack(spacing: 0) {
@@ -146,7 +146,7 @@ struct NotchRootView: View {
             .accessibilityLabel("Toggle NotchFree")
     }
     private var expandedContent: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: PanelMetrics.spacing) {
             HStack(spacing: 4) {
                 tabButton("Home", symbol: "square.grid.2x2.fill", tab: .home)
                 tabButton("Tray", symbol: "tray.fill", tab: .tray)
@@ -157,7 +157,8 @@ struct NotchRootView: View {
                 IconButton(symbol: "chevron.up", label: "Close panel") { model.close(force: true) }
             }
             if let message = model.message {
-                HStack { Text(message).font(.caption).lineLimit(2); Spacer(); Button("Dismiss") { model.message = nil }.buttonStyle(.plain) }.foregroundStyle(.orange)
+                HStack { Text(message).font(.caption).lineLimit(2).help(message); Spacer(); Button("Dismiss") { model.message = nil }.buttonStyle(.plain) }
+                    .foregroundStyle(.orange).frame(height: PanelMetrics.messageHeight)
             }
             if model.presentation.tab == .tray { TrayView(model: model, shelf: shelf).transition(.opacity) }
             else {
@@ -174,7 +175,7 @@ struct NotchRootView: View {
                             CalendarView(provider: model.calendar).frame(maxWidth: .infinity)
                         }
                     } else { widget }
-                }.frame(height: 152)
+                }.frame(height: PanelMetrics.widgetHeight)
                 HStack(spacing: 4) {
                     ForEach(model.library.widgets) { kind in
                         Button { model.selectWidget(kind) } label: {
@@ -214,6 +215,7 @@ func widgetSymbol(_ kind: WidgetKind) -> String {
 func timeString(_ seconds: Double) -> String { let value = Int(max(0, seconds).rounded(.up)); return String(format: "%02d:%02d", value / 60, value % 60) }
 
 struct MusicView: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var media: MediaProvider
     var now: Date
     @State private var seeking: Double = 0
@@ -222,7 +224,7 @@ struct MusicView: View {
         VStack(alignment: .leading, spacing: 12) {
             if media.snapshot.available {
                 HStack(spacing: 14) {
-                    AlbumArt(data: media.snapshot.artwork, size: 78).id(media.snapshot.title).transition(.opacity)
+                    AlbumArt(data: media.snapshot.artwork, size: 78).id(media.snapshot.identity).transition(.opacity)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(media.snapshot.title).font(.system(size: 14, weight: .semibold)).lineLimit(2)
                         Text(media.snapshot.artist).font(.system(size: 11)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
@@ -252,11 +254,12 @@ struct MusicView: View {
                 }
                 Text(media.status).font(.system(size: 10)).foregroundStyle(.white.opacity(0.35)).lineLimit(2)
             }
-        }.frame(maxWidth: .infinity, alignment: .leading).animation(.easeOut(duration: 0.2), value: media.snapshot.title)
+        }.frame(maxWidth: .infinity, alignment: .leading).animation(.easeOut(duration: 0.2), value: media.snapshot.identity)
     }
 }
 
 struct CalendarView: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var provider: CalendarProvider
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {

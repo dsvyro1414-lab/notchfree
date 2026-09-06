@@ -41,6 +41,8 @@ import NotchFreeCore
         try expect(media.position(at: now.addingTimeInterval(500)) == 120, "Progress clamps to duration")
         let empty = try MediaSnapshot.decode(Data("{\"payload\":{}}".utf8))
         try expect(!empty.available, "Cleared metadata removes stale artwork and title")
+        try artworkChecks()
+        try panelChecks()
 
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("NotchFreeChecks-" + UUID().uuidString)
         let fm = FileManager.default
@@ -84,6 +86,75 @@ import NotchFreeCore
         try expect(!fm.fileExists(atPath: moveSource.path), "Explicit move removes source only after moving")
         try expect(fm.fileExists(atPath: try tray.fileURL(for: moved).path), "Explicit move keeps destination available")
         print("\n\(count) checks passed.")
+    }
+    static func artworkChecks() throws {
+        var first = MediaSnapshot()
+        first.bundleID = "com.apple.Music"; first.trackID = "music-1"
+        first.title = "Same title"; first.artist = "Artist one"; first.album = "Album one"; first.duration = 120
+        let cover = Data([1, 2, 3])
+        var state = MediaArtworkState()
+        state.update(first)
+        let original = state.request!
+        try expect(state.apply(cover, for: original), "Current track accepts its delayed artwork")
+        var paused = first; paused.playing = false; paused.elapsed = 40
+        state.update(paused)
+        try expect(state.snapshot.artwork == cover, "Pause and seek preserve the current cover")
+        try expect(state.request == original, "Playback position does not start a new artwork session")
+
+        var other = first; other.trackID = "music-2"
+        state.update(other)
+        try expect(state.snapshot.artwork == nil, "A different ID with identical metadata clears the old cover")
+        try expect(!state.apply(cover, for: original), "A late cover cannot overwrite the next track")
+        state.update(first)
+        try expect(!state.apply(cover, for: original), "A to B to A switching still rejects the first A request")
+        let beforeReconnect = state.request!
+        state.reset(); state.update(first)
+        try expect(!state.apply(cover, for: beforeReconnect), "Reconnect invalidates in-flight artwork for the same track")
+        let beforeStop = state.request!
+        state.update(MediaSnapshot())
+        try expect(state.request == nil && !state.snapshot.available && state.snapshot.artwork == nil, "Stopping clears both media and artwork state")
+        try expect(!state.apply(cover, for: beforeStop), "Stopped media cannot receive delayed artwork")
+
+        first.trackID = ""; other = first; other.artist = "Artist two"
+        try expect(first.identity != other.identity, "Missing IDs still distinguish artists with identical song titles")
+        other = first; other.album = "Different album"
+        try expect(first.identity != other.identity, "Missing IDs distinguish album versions")
+        other = first; other.bundleID = "com.spotify.client"
+        try expect(first.identity != other.identity, "Artwork cache identities separate Music and Spotify")
+        try expect(!first.matchesSystemTrack(other), "System fallback rejects another media app")
+        other = first; other.artist = "Different artist"
+        try expect(!first.matchesSystemTrack(other), "System fallback rejects an unrelated track with the same title")
+        other = first; other.duration = 150
+        try expect(!first.matchesSystemTrack(other), "System fallback rejects a different recording duration")
+        other = first; other.trackID = "system-specific-id"; other.duration += 0.2
+        try expect(first.matchesSystemTrack(other), "Matching Music metadata allows system artwork across ID namespaces")
+
+        let decoded = try MediaSnapshot.decode(Data("""
+        {"payload":{"title":"Track","contentItemIdentifier":"content-id","uniqueIdentifier":123,"artworkData":"AQID"}}
+        """.utf8))
+        try expect(decoded.trackID == "content-id" && decoded.artwork == cover, "System payload decodes track identity and artwork bytes")
+        let numeric = try MediaSnapshot.decode(Data("{\"title\":\"Track\",\"uniqueIdentifier\":123}".utf8))
+        try expect(numeric.trackID == "123", "Numeric system track IDs remain stable strings")
+        let missing = try MediaSnapshot.decode(Data("{\"title\":\"Track\",\"artworkData\":\"invalid!\"}".utf8))
+        try expect(missing.artwork == nil, "Malformed artwork keeps metadata usable")
+    }
+
+    static func panelChecks() throws {
+        func size(expanded: Bool = true, activity: Bool = false, compact: Bool = true,
+                  message: Bool = false, trayError: Bool = false, width: Double = 720) -> PanelSize {
+            PanelMetrics.visibleSize(notchWidth: 180, notchHeight: 32, panelWidth: 720,
+                                     availableWidth: width, expanded: expanded, activity: activity,
+                                     compact: compact, message: message, trayError: trayError)
+        }
+        let opened = size()
+        try expect(opened.width == 720 && opened.height == 276, "Expanded panel retains width and removes 28 points of height")
+        try expect(size(expanded: false, compact: false).height == 35, "Idle notch height is preserved")
+        try expect(size(expanded: false).width == 284, "Compact playback strip width is preserved")
+        try expect(size(expanded: false, activity: true).height == 80, "Activity previews keep their existing height")
+        try expect(size(width: 580).width == 580, "Shared drawing and pointer geometry clamps to a narrow display")
+        try expect(size(message: true).height == opened.height + 46, "A panel message adds room above the full widget")
+        try expect(size(trayError: true).height == opened.height + 38, "Tray errors get room without shrinking file tiles")
+        try expect(size(message: true, trayError: true).height + PanelMetrics.shadowGutter == PanelMetrics.envelopeHeight(notchHeight: 32), "Both messages and shadow fit the AppKit hosting envelope")
     }
     static func tryRead(_ disk: JSONDiskStore<UserLibrary>) -> UserLibrary { (try? disk.load(default: UserLibrary())) ?? UserLibrary() }
 }

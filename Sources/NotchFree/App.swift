@@ -53,7 +53,8 @@ import os
             window.title = "NotchFree"; window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
             window.backgroundColor = NSColor(white: 0.065, alpha: 1); window.appearance = NSAppearance(named: .darkAqua)
             window.isReleasedWhenClosed = false; window.minSize = NSSize(width: 730, height: 570)
-            window.contentView = NSHostingView(rootView: SettingsView(model: model)); window.center(); settingsWindow = window
+            window.contentView = NSHostingView(rootView: SettingsView(model: model, appearance: model.appearance)
+                .modifier(AccentTheme(appearance: model.appearance))); window.center(); settingsWindow = window
         }
         NSApp.activate(ignoringOtherApps: true); settingsWindow?.makeKeyAndOrderFront(nil)
     }

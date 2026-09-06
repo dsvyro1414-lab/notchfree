@@ -4,11 +4,13 @@ This is a source alpha. Keep observed behavior separate from integrations that a
 
 ## Automated checks
 
-Run `./scripts/check.sh`. The 31 deterministic checks exercise:
+Run `./scripts/check.sh`. The 58 deterministic checks exercise:
 
 - Presentation priority, editor/drag locks, dismissal and repeated expansion cycles.
 - Timer pause/resume, persistence, expiry after elapsed time and one-time completion.
 - System media timestamp units, progress clamping and stale metadata clearing.
+- Track identities, same-name songs, delayed artwork, A/B/A switching, pause/seek preservation, reconnect/stop invalidation and guarded Music system fallback.
+- Shared panel geometry, compact/activity sizes, narrow screens and room for simultaneous messages.
 - Atomic library persistence, backup recovery and preservation of corrupt files.
 - Real file copies, duplicate names, restart persistence, removal failure, explicit moves and path traversal/recursive import rejection.
 
@@ -18,13 +20,24 @@ These are Foundation-based executable checks, not XCTest. The GitHub workflow ru
 
 Platform: Apple Silicon, macOS 26.6.2, Swift 6.3.3, Apple Command Line Tools.
 
-- All 31 checks passed.
+- All 58 checks passed after the artwork, accent and panel-height changes (31 checks at the initial baseline).
 - Debug and release applications and the Objective-C media adapter compiled; ad-hoc bundle signatures verified.
-- A fresh source copy built in 40 seconds without the existing build cache. Its installer successfully installed into an isolated temporary destination and removed the staging app.
+- At the initial baseline, a fresh source copy built in 40 seconds without the existing build cache. Its installer successfully installed into an isolated temporary destination and removed the staging app.
 - The release app was installed at `~/Applications/NotchFree.app`; the staging duplicate was removed. The actual panel and settings were inspected through macOS accessibility and screenshots.
 - A test note entered in the real editor was saved to disk and restored in the UI after quitting and relaunching the same installed bundle. The temporary note was then cleared.
 - Now Playing displayed a real track, artist, duration and playback position.
 - System settings read the actual output volume, built-in display brightness and battery percentage.
+
+### Artwork, accent and panel-height update
+
+- The updated debug and release builds passed. The installed release bundle passed strict signature verification and its executable UUID matched the release build.
+- Apple Music displayed real artwork in both the expanded player and compact strip. Play/pause, several next-track changes, a change to a different album cover and a midpoint seek preserved the correct artwork. Three consecutive previous-track presses returned to the original song with its correct cover in both places. A long two-line title and artist fitted the player.
+- Each of the six accent presets could be selected. Accent controls updated immediately, including the panel. Blue remained selected after quitting and reopening the same installed bundle; the original green was restored after testing.
+- Before/after screenshots at the same display scale showed the same 720 pt width and a 28 pt reduction in visible height (304 to 276 pt on this display, including its 32 pt notch strip). The expanded section is now 244 pt.
+- Media, Calendar, Timer, Notes, Tasks, Shortcuts, the inactive Mirror view and empty Tray fitted the reduced panel. Closing with the panel button and reopening from the compact strip worked. Calendar and camera permissions were not enabled for this inspection.
+- The user subsequently confirmed the updated app worked and supplied a screenshot showing one PNG file in Tray. File presence and the populated Tray layout are user-confirmed; outgoing drag and AirDrop are not established by that screenshot.
+- Spotify was at its login screen. The user explicitly chose to finish without a live Spotify test; its direct artwork integration is implemented but not verified with an authenticated player in this pass.
+- A real track without artwork, visible error banners, physical hover behavior and the full set of file import/drag interactions were not fully exercised in this pass. Deterministic checks cover stale artwork rejection, missing artwork state and additional height for messages; these do not replace those live tests.
 
 ## Hardware acceptance checklist
 

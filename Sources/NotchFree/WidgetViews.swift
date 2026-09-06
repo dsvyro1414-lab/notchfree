@@ -3,6 +3,7 @@ import AppKit
 import NotchFreeCore
 
 struct TimerWidget: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @State private var minutes = 5
     var body: some View {
@@ -30,6 +31,7 @@ struct TimerWidget: View {
 }
 
 struct NotesWidget: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @FocusState private var focused: Bool
     var body: some View {
@@ -51,6 +53,7 @@ struct NotesWidget: View {
 }
 
 struct TasksWidget: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @State private var draft = ""
     @State private var showArchive = false
@@ -89,6 +92,7 @@ struct TasksWidget: View {
 }
 
 struct ShortcutsWidget: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @ObservedObject var provider: ShortcutProvider
     var body: some View {
@@ -132,13 +136,15 @@ struct MirrorWidget: View {
 }
 
 struct TrayView: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @ObservedObject var shelf: ShelfStore
     @State private var selection = Set<UUID>()
     var selectedURLs: [URL] { shelf.items.filter { selection.contains($0.id) }.compactMap { shelf.url($0) } }
     var body: some View {
-        VStack(spacing: 10) {
-            if let error = shelf.error { Text(error).font(.system(size: 10)).foregroundStyle(.orange).lineLimit(2) }
+        VStack(spacing: PanelMetrics.traySpacing) {
+            if let error = shelf.error { Text(error).font(.system(size: 10)).foregroundStyle(.orange).lineLimit(2)
+                    .help(error).frame(height: PanelMetrics.trayErrorHeight) }
             if shelf.items.isEmpty {
                 VStack(spacing: 9) {
                     Image(systemName: model.presentation.dragging ? "tray.and.arrow.down.fill" : "tray").font(.system(size: 31, weight: .ultraLight)).foregroundStyle(nookAccent)
@@ -203,6 +209,7 @@ struct TrayView: View {
 
 /// AppKit publishes one pasteboard item per selected file so Finder receives the whole selection.
 private struct FileDragTile: NSViewRepresentable {
+    @Environment(\.nookAccent) private var nookAccent
     var url: URL
     var name: String
     var selected: Bool

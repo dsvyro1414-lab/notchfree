@@ -47,6 +47,8 @@ Ad-hoc signing is local code signing, **not** Apple notarization. macOS privacy 
 
 Select **Apple Music** or **Spotify** in Settings → Media for direct Automation-based integration. Open the chosen player first, then allow the macOS Automation prompt. Playback bars are an animated play/pause indicator, not a recording or frequency analysis of system audio.
 
+Direct Music and Spotify modes load album artwork for both the player and the compact strip. Covers stay in place during pause/seek and update when the track changes. Missing artwork is retried; tracks without a cover keep the music-note placeholder.
+
 ### Files and AirDrop
 
 Drop files or folders onto the notch, add them with **+**, or use **Paste**. The tray keeps its own copies across restarts; your original files stay in place. Hold **Option while dropping**, when the source supports moving, to move instead of copy.
@@ -63,6 +65,8 @@ Select files with a click (Command-click for multiple). Drag the selection out t
 - **Mirror:** click Open mirror, choose a camera and check your preview. Camera capture stops when the mirror/panel closes; video is not recorded.
 
 Configure the widget dock, hover, haptics, width and display behavior in Settings. Reduce Motion follows macOS.
+
+Settings → Appearance → **Accent color** offers Green, Blue, Purple, Pink, Orange and White. Changes apply immediately and survive relaunch. The expanded panel uses tighter vertical spacing while keeping its default 720 pt width, text and control sizes; messages get extra room when needed.
 
 ## Optional permissions
 

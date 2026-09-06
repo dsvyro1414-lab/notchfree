@@ -21,6 +21,16 @@ struct ScreenGeometry {
     }
 }
 
+extension AppModel {
+    func panelSize(geometry: ScreenGeometry, availableWidth: CGFloat) -> PanelSize {
+        PanelMetrics.visibleSize(notchWidth: geometry.width, notchHeight: geometry.height,
+                                 panelWidth: panelWidth, availableWidth: min(panelWidth, availableWidth),
+                                 expanded: presentation.expanded, activity: presentation.visibleActivity != nil,
+                                 compact: media.snapshot.available || library.timer.isRunning || !shelf.items.isEmpty,
+                                 message: message != nil, trayError: presentation.tab == .tray && shelf.error != nil)
+    }
+}
+
 @MainActor final class PanelController {
     let model: AppModel
     private var panels: [(NSScreen, NotchPanel)] = []
@@ -40,6 +50,8 @@ struct ScreenGeometry {
         }
         model.$settingsRevision.dropFirst().sink { [weak self] _ in DispatchQueue.main.async { self?.rebuild() } }.store(in: &subscriptions)
         model.$presentation.sink { [weak self] _ in DispatchQueue.main.async { self?.updateMouse() } }.store(in: &subscriptions)
+        model.$message.sink { [weak self] _ in DispatchQueue.main.async { self?.updateMouse() } }.store(in: &subscriptions)
+        model.shelf.$error.sink { [weak self] _ in DispatchQueue.main.async { self?.updateMouse() } }.store(in: &subscriptions)
         if let monitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .leftMouseDown], handler: { [weak self] _ in self?.updateMouse() }) { monitors.append(monitor) }
         if let monitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .keyDown], handler: { [weak self] event in
             guard let self else { return event }; self.updateMouse()
@@ -64,26 +76,25 @@ struct ScreenGeometry {
         }
         for screen in screens {
             let geometry = ScreenGeometry(screen)
-            let envelope = min(model.panelWidth + 32, screen.frame.width)
-            let frame = NSRect(x: geometry.center - envelope / 2, y: screen.frame.maxY - 370, width: envelope, height: 370)
+            let envelope = min(model.panelWidth + PanelMetrics.shadowGutter, screen.frame.width)
+            let envelopeHeight = PanelMetrics.envelopeHeight(notchHeight: geometry.height)
+            let frame = NSRect(x: geometry.center - envelope / 2, y: screen.frame.maxY - envelopeHeight, width: envelope, height: envelopeHeight)
             let panel = NotchPanel(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
             panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
             panel.isOpaque = false; panel.backgroundColor = .clear; panel.hasShadow = false
             panel.isMovable = false; panel.hidesOnDeactivate = false; panel.acceptsMouseMovedEvents = true
             panel.isReleasedWhenClosed = false; panel.title = "NotchFree"
-            panel.contentView = DropHostingView(rootView: AnyView(NotchRootView(model: model, geometry: geometry, availableWidth: envelope)), model: model)
+            panel.contentView = DropHostingView(rootView: AnyView(NotchRootView(model: model, geometry: geometry, availableWidth: envelope)
+                .modifier(AccentTheme(appearance: model.appearance))), model: model)
             panel.orderFrontRegardless(); panels.append((screen, panel))
         }
         updateMouse()
     }
     private func visibleRect(_ screen: NSScreen) -> NSRect {
         let geometry = ScreenGeometry(screen)
-        let hasCompact = model.media.snapshot.available || model.library.timer.isRunning || !model.shelf.items.isEmpty
-        let width = model.presentation.expanded ? min(model.panelWidth, screen.frame.width - 32) :
-            model.presentation.visibleActivity != nil ? max(geometry.width + 130, 360) : geometry.width + (hasCompact ? 104 : 0)
-        let height = geometry.height + (model.presentation.expanded ? 272 : model.presentation.visibleActivity != nil ? 48 : 3)
-        return NSRect(x: geometry.center - width / 2, y: screen.frame.maxY - height, width: width, height: height)
+        let size = model.panelSize(geometry: geometry, availableWidth: screen.frame.width - PanelMetrics.shadowGutter)
+        return NSRect(x: geometry.center - size.width / 2, y: screen.frame.maxY - size.height, width: size.width, height: size.height)
     }
     func openFromMenu() {
         model.open(); panels.first?.1.orderFrontRegardless(); panels.first?.1.makeKey()

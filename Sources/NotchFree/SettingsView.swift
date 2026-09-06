@@ -3,7 +3,9 @@ import AppKit
 import NotchFreeCore
 
 struct SettingsView: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
+    @ObservedObject var appearance: AppearancePreferences
     @State private var page = "Welcome"
     @AppStorage("openOnHover") private var hover = true
     @AppStorage("gestures") private var gestures = true
@@ -54,6 +56,24 @@ struct SettingsView: View {
         switch page {
         case "Welcome": welcome
         case "Appearance":
+            section("Accent color") {
+                HStack(spacing: 15) {
+                    ForEach(AccentPreset.allCases) { preset in
+                        Button { appearance.accent = preset } label: {
+                            VStack(spacing: 7) {
+                                Circle().fill(preset.color).frame(width: 32, height: 32)
+                                    .overlay {
+                                        if appearance.accent == preset {
+                                            Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.black)
+                                        }
+                                    }
+                                Text(preset.title).font(.system(size: 10)).foregroundStyle(.white.opacity(0.7))
+                            }.frame(width: 46).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel("\(preset.title) accent")
+                            .accessibilityValue(appearance.accent == preset ? "Selected" : "Not selected")
+                    }
+                }
+            }
             section("Make yourself at home") {
                 Toggle("Open on hover", isOn: $hover)
                 Toggle("Trackpad gestures on the top strip", isOn: $gestures)
@@ -107,7 +127,7 @@ struct SettingsView: View {
     var welcome: some View {
         VStack(alignment: .leading, spacing: 23) {
             ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 22).fill(LinearGradient(colors: [Color(red: 0.20, green: 0.28, blue: 0.23), Color(white: 0.11)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                RoundedRectangle(cornerRadius: 22).fill(LinearGradient(colors: [nookAccent.opacity(0.2), Color(white: 0.11)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 NotchShape(radius: 23).fill(.black).frame(width: 285, height: 108)
                 HStack(spacing: 17) {
                     Image(systemName: "music.note").font(.system(size: 26)).foregroundStyle(nookAccent).frame(width: 57, height: 57).background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
@@ -179,6 +199,7 @@ struct CalendarSettings: View {
     }
 }
 struct SystemSettings: View {
+    @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
     @ObservedObject var hud: SystemHUDProvider
     @ObservedObject var devices: DeviceActivities
