@@ -1,4 +1,5 @@
 import SwiftUI
+import NotchFreeCore
 
 enum AccentPreset: String, CaseIterable, Identifiable {
     case green, blue, purple, pink, orange, white
@@ -38,6 +39,6 @@ extension EnvironmentValues {
 struct AccentTheme: ViewModifier {
     @ObservedObject var appearance: AppearancePreferences
     func body(content: Content) -> some View {
-        content.environment(\.nookAccent, appearance.accent.color).tint(appearance.accent.color)
+        content.environment(\.locale, AppEnglish.locale).environment(\.nookAccent, appearance.accent.color).tint(appearance.accent.color)
     }
 }

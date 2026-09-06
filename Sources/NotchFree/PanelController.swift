@@ -56,6 +56,7 @@ extension AppModel {
         if let monitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .keyDown], handler: { [weak self] event in
             guard let self else { return event }; self.updateMouse()
             if event.type == .keyDown, event.keyCode == 53, self.panels.contains(where: { $0.1.isKeyWindow }) {
+                if self.model.selectedWidget == .timer, self.model.presentation.editing { return event }
                 self.model.close(force: true); NSApp.keyWindow?.resignKey(); return nil
             }
             return event
@@ -181,10 +182,10 @@ extension AppModel {
             for receiver in receivers {
                 let directory = FileManager.default.temporaryDirectory.appendingPathComponent("NotchFree-Promise-" + UUID().uuidString)
                 do { try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true) }
-                catch { model.message = error.localizedDescription; return false }
+                catch { model.message = AppFailure.message(error, operation: .importFile); return false }
                 receiver.receivePromisedFiles(atDestination: directory, options: [:], operationQueue: OperationQueue()) { [weak model] url, error in
                     Task { @MainActor in
-                        if let error { model?.message = error.localizedDescription }
+                        if let error { model?.message = AppFailure.message(error, operation: .importFile) }
                         else { model?.shelf.importFiles([url], move: true) }
                     }
                 }

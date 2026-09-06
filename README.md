@@ -1,7 +1,5 @@
 # NotchFree
 
-[Инструкция на русском](README.ru.md)
-
 **Your music, your next meeting, that file you need. Right at the top of your Mac.**
 
 An independent, free and open-source notch companion inspired by NotchNook. Built natively with SwiftUI and AppKit. Works around a MacBook notch or as a small top-center panel on a display without one.
@@ -58,7 +56,7 @@ Select files with a click (Command-click for multiple). Drag the selection out t
 ### Widgets
 
 - **Calendar:** select a day, browse weeks, choose calendars and show upcoming meetings. Access is used to read events; NotchFree does not edit calendars.
-- **Timer:** choose a duration, pause/resume/reset. Its saved deadline survives sleep and app restarts. A completion sound requires the app to be running; after a quit it catches up on the next launch.
+- **Timer:** click the centered hours, minutes or seconds to enter a duration, or choose 5 / 15 / 25 / 50 min. Start, pause, resume or reset your focus session; short motivational captions follow its state. Its saved deadline survives sleep and app restarts. A completion sound requires the app to be running; after a quit it catches up on the next launch.
 - **Notes:** a local quick note, automatically saved. Click Done to let the panel close when the pointer leaves.
 - **Tasks:** add, favorite and complete tasks. Completed items move to the Completed view; you can restore them.
 - **Shortcuts:** run shortcuts already present in Apple's Shortcuts app. Their own permissions and side effects still apply.
@@ -66,7 +64,15 @@ Select files with a click (Command-click for multiple). Drag the selection out t
 
 Configure the widget dock, hover, haptics, width and display behavior in Settings. Reduce Motion follows macOS.
 
-Settings → Appearance → **Accent color** offers Green, Blue, Purple, Pink, Orange and White. Changes apply immediately and survive relaunch. The expanded panel uses tighter vertical spacing while keeping its default 720 pt width, text and control sizes; messages get extra room when needed.
+Settings → Appearance → **Accent color** offers Green, Blue, Purple, Pink, Orange and White. Changes apply immediately and survive relaunch. The expanded section is 212 pt high (244 pt including a 32 pt notch strip), with the same default 720 pt width, text and control sizes. Messages get extra room when needed.
+
+### Focus timer
+
+Click a number in **HH:MM:SS** to select and replace it. **Tab** moves between fields, **Return** confirms without starting, and **Escape** cancels the draft; a second Escape closes the panel. Editing keeps the panel open when the pointer leaves. Enter a duration from **00:00:01 to 23:59:59**; invalid drafts are never saved.
+
+Pause before changing the remaining time or selecting a preset. The new value becomes the selected duration for both progress and Reset, and remains paused until Resume. Reset restores that duration; Start again repeats it after completion. Closing or relaunching the app preserves the timer's saved state.
+
+The app's interface, dates and error guidance use English. Your time zone, notes, filenames, track names and calendar content keep their original values. macOS-owned permission and sharing dialogs may follow the system language.
 
 ## Optional permissions
 

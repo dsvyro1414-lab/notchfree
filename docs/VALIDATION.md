@@ -4,10 +4,11 @@ This is a source alpha. Keep observed behavior separate from integrations that a
 
 ## Automated checks
 
-Run `./scripts/check.sh`. The 58 deterministic checks exercise:
+Run `./scripts/check.sh`. The 114 deterministic checks exercise:
 
 - Presentation priority, editor/drag locks, dismissal and repeated expansion cycles.
-- Timer pause/resume, persistence, expiry after elapsed time and one-time completion.
+- Timer input boundaries, presets, motivational states, pause/edit/resume/reset, legacy persistence, expiry after elapsed time and one-time completion.
+- English date formatting and app-owned guidance for localized external, permission, missing-file and full-disk errors.
 - System media timestamp units, progress clamping and stale metadata clearing.
 - Track identities, same-name songs, delayed artwork, A/B/A switching, pause/seek preservation, reconnect/stop invalidation and guarded Music system fallback.
 - Shared panel geometry, compact/activity sizes, narrow screens and room for simultaneous messages.
@@ -38,6 +39,22 @@ Platform: Apple Silicon, macOS 26.6.2, Swift 6.3.3, Apple Command Line Tools.
 - The user subsequently confirmed the updated app worked and supplied a screenshot showing one PNG file in Tray. File presence and the populated Tray layout are user-confirmed; outgoing drag and AirDrop are not established by that screenshot.
 - Spotify was at its login screen. The user explicitly chose to finish without a live Spotify test; its direct artwork integration is implemented but not verified with an authenticated player in this pass.
 - A real track without artwork, visible error banners, physical hover behavior and the full set of file import/drag interactions were not fully exercised in this pass. Deterministic checks cover stale artwork rejection, missing artwork state and additional height for messages; these do not replace those live tests.
+
+### Compact panel, focus timer and English-first update
+
+- All 114 deterministic checks pass, including a separate run with Russian process locale overrides.
+- The expanded section is 212 pt; the visible panel is 244 pt tall with the 32 pt strip on this display. The prior visible height was 276 pt. Default width remains 720 pt. The AppKit envelope and pointer/drop geometry use the same shared metrics.
+- The real interface was inspected for Media, Calendar, Timer, Notes, Tasks, Shortcuts, inactive Mirror, and empty/populated Tray. A temporary long-filename tray fixture was inserted through the real ShelfRepository and inspected in the UI; this does not claim a successful native file-picker or outgoing drag test.
+- Real keyboard checks covered selecting and replacing digits, multi-digit input, Tab between fields, Return to confirm without starting, invalid input disabling Start, Escape cancelling the draft, and a second Escape closing the panel.
+- Start, Pause, editing the paused remainder, Resume, completion and all four motivational captions were inspected. Reset was retested while running, paused, completed and editing, including an ordinary mouse click. It restores the selected duration; it does not clear the duration to zero. The button has a full capsule hit area and explains the target duration in its tooltip.
+- Native text fields are recreated when returning from the read-only countdown. AppKit owns the active text selection; SwiftUI ticks do not overwrite the field editor. The display clock is synchronized at Start/Resume to avoid an extra second in the first frame.
+- App-owned copy and date labels use English; user-provided names, notes and shortcut titles keep their original language. Native macOS dialogs may follow system settings. The duplicate Russian README was removed after confirming its instructions are covered in English.
+- Gitleaks 8.30.1 was downloaded from its official release with checksum verification. Full working-directory, two-commit history, installed-bundle and extracted executable-string scans reported no secrets. The final staged diff is also scanned before committing.
+- Cleanup removed an unused ShortcutsWidget model dependency and fixed temporary text-import cleanup on failure. The legacy serialized shortcuts field is retained for compatibility. Build caches and validation fixtures are excluded from Git.
+
+The final debug and release builds passed without compiler warnings. The installed release passed strict signature verification; executable UUID `98170B1F-8892-3388-BD1F-4FF8ACE8E33F` matches the release build. It was launched with Russian language/locale arguments: Calendar, panel and timer labels remained English. Installed Start/Pause/Reset returned 04:54 to the selected 05:00 and cleared progress. Temporary tray data was removed, and the original timer configuration was restored.
+
+Calendar/camera permission grants, active camera capture, physical hover across all displays, AirDrop delivery, and Spotify playback remain separate hardware/provider acceptance checks.
 
 ## Hardware acceptance checklist
 

@@ -2,34 +2,6 @@ import SwiftUI
 import AppKit
 import NotchFreeCore
 
-struct TimerWidget: View {
-    @Environment(\.nookAccent) private var nookAccent
-    @ObservedObject var model: AppModel
-    @State private var minutes = 5
-    var body: some View {
-        HStack(spacing: 35) {
-            VStack(alignment: .leading, spacing: 6) {
-                Label("A moment of focus", systemImage: "timer").font(.system(size: 12)).foregroundStyle(nookAccent)
-                Text(timeString(model.library.timer.remaining(at: model.now))).font(.system(size: 52, weight: .light, design: .rounded)).monospacedDigit()
-                Text(model.library.timer.completed ? "Time’s up. You earned a break." : model.library.timer.isRunning ? "One thing at a time." : "Make a little time for yourself.").font(.system(size: 11)).foregroundStyle(.secondary)
-            }
-            Spacer()
-            VStack(spacing: 12) {
-                if !model.library.timer.isRunning && model.library.timer.pausedRemaining == nil {
-                    Picker("Minutes", selection: $minutes) { ForEach([1, 5, 10, 15, 25, 30, 45, 60], id: \.self) { Text("\($0) min").tag($0) } }.frame(width: 110)
-                    Button("Start timer") { model.library.timer.start(seconds: Double(minutes * 60), now: Date()); model.feedback() }.buttonStyle(.borderedProminent).tint(nookAccent).foregroundStyle(.black)
-                } else {
-                    Button(model.library.timer.isRunning ? "Pause" : "Resume") {
-                        if model.library.timer.isRunning { model.library.timer.pause(now: Date()) }
-                        else { model.library.timer.resume(now: Date()) }
-                    }.buttonStyle(.borderedProminent).tint(nookAccent).foregroundStyle(.black).disabled(model.library.timer.completed)
-                    Button("Reset") { model.library.timer.reset() }.buttonStyle(.plain).foregroundStyle(.secondary)
-                }
-            }
-        }.padding(.horizontal, 14)
-    }
-}
-
 struct NotesWidget: View {
     @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var model: AppModel
@@ -93,7 +65,6 @@ struct TasksWidget: View {
 
 struct ShortcutsWidget: View {
     @Environment(\.nookAccent) private var nookAccent
-    @ObservedObject var model: AppModel
     @ObservedObject var provider: ShortcutProvider
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -120,10 +91,10 @@ struct MirrorWidget: View {
             Group {
                 if camera.active { CameraPreview(session: camera.session) }
                 else { Image(systemName: "person.crop.circle").font(.system(size: 46, weight: .ultraLight)).foregroundStyle(.white.opacity(0.3)).frame(maxWidth: .infinity, maxHeight: .infinity).background(.white.opacity(0.05)) }
-            }.frame(width: 228, height: 148).clipShape(RoundedRectangle(cornerRadius: 18))
+            }.frame(width: 228, height: PanelMetrics.widgetHeight).clipShape(RoundedRectangle(cornerRadius: 18))
             VStack(alignment: .leading, spacing: 12) {
                 Text("Looking good.").font(.system(size: 20, weight: .medium, design: .rounded))
-                Text(camera.status).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(camera.status).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2).help(camera.status)
                 if !camera.devices.isEmpty {
                     Picker("Camera", selection: $camera.selectedID) { ForEach(camera.devices, id: \.uniqueID) { Text($0.localizedName).tag($0.uniqueID) } }
                         .labelsHidden().onChange(of: camera.selectedID) { _, _ in if camera.active { camera.stop(); camera.start() } }
@@ -150,7 +121,7 @@ struct TrayView: View {
                     Image(systemName: model.presentation.dragging ? "tray.and.arrow.down.fill" : "tray").font(.system(size: 31, weight: .ultraLight)).foregroundStyle(nookAccent)
                     Text(model.presentation.dragging ? "Drop it here." : "A stop along the way.").font(.system(size: 17, weight: .medium, design: .rounded))
                     Text("Drop files here. Pick them up anywhere.").font(.system(size: 11)).foregroundStyle(.secondary)
-                }.frame(maxWidth: .infinity).frame(height: 143)
+                }.frame(maxWidth: .infinity).frame(height: PanelMetrics.widgetHeight)
                     .background(.white.opacity(0.025), in: RoundedRectangle(cornerRadius: 18))
                     .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.09), style: StrokeStyle(lineWidth: 1, dash: [4, 5])) }
             } else {
@@ -179,7 +150,7 @@ struct TrayView: View {
                             }
                         }
                     }
-                }.frame(height: 143)
+                }.frame(height: PanelMetrics.widgetHeight)
             }
             HStack(spacing: 8) {
                 IconButton(symbol: "plus", label: "Add files") {

@@ -21,8 +21,7 @@ enum CommandRunner {
                     process.waitUntilExit(); watchdog.cancel()
                     let output = String(data: data, encoding: .utf8) ?? ""
                     guard process.terminationStatus == 0 else {
-                        throw NSError(domain: "Command", code: Int(process.terminationStatus),
-                                      userInfo: [NSLocalizedDescriptionKey: String(output.prefix(500))])
+                        throw NSError(domain: "Command", code: Int(process.terminationStatus))
                     }
                     continuation.resume(returning: output)
                 } catch { continuation.resume(throwing: error) }
@@ -85,7 +84,7 @@ enum CommandRunner {
                     self.receive(MediaSnapshot())
                 }
             }
-        } catch { status = error.localizedDescription }
+        } catch { status = AppFailure.message(error, operation: .media) }
     }
     private func receive(_ value: MediaSnapshot) {
         let previousRequest = artworkState.request
@@ -127,7 +126,7 @@ enum CommandRunner {
     private func helper(_ arguments: [String]) {
         guard let scriptURL, let frameworkURL else { return }
         Task { do { _ = try await CommandRunner.run("/usr/bin/perl", [scriptURL.path, frameworkURL.path] + arguments) }
-            catch { status = "Media command failed: \(error.localizedDescription)" } }
+            catch { status = AppFailure.message(error, operation: .media) } }
     }
     private func startFallback() {
         status = "Automation access is needed for this player."
@@ -203,7 +202,7 @@ enum CommandRunner {
     func requestAccess() {
         Task {
             do { access = try await store.requestFullAccessToEvents(); refresh() }
-            catch { status = error.localizedDescription }
+            catch { status = AppFailure.message(error, operation: .calendar) }
         }
     }
     func refresh() {
@@ -265,7 +264,7 @@ enum CommandRunner {
                         guard let self, self.requestGeneration == generation else { return }
                         self.active = session.isRunning; self.status = session.isRunning ? "Camera is on" : "Camera could not start"
                     }
-                } catch { Task { @MainActor [weak self] in self?.status = error.localizedDescription } }
+                } catch { Task { @MainActor [weak self] in self?.status = AppFailure.message(error, operation: .camera) } }
             }
         }
     }

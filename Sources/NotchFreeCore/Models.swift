@@ -52,12 +52,16 @@ public struct Countdown: Codable, Equatable, Sendable {
         max(0, deadline.map { $0.timeIntervalSince(now) } ?? pausedRemaining ?? duration)
     }
     public mutating func start(seconds: TimeInterval, now: Date) {
-        duration = max(1, seconds); deadline = now.addingTimeInterval(duration)
+        guard seconds.isFinite, (1...TimerDurationInput.maximumDuration).contains(seconds) else { return }
+        duration = seconds; deadline = now.addingTimeInterval(duration)
         pausedRemaining = nil; completed = false
     }
-    public mutating func pause(now: Date) { pausedRemaining = remaining(at: now); deadline = nil }
+    public mutating func pause(now: Date) {
+        guard isRunning, !expire(now: now) else { return }
+        pausedRemaining = remaining(at: now); deadline = nil
+    }
     public mutating func resume(now: Date) {
-        guard let pausedRemaining else { return }
+        guard !completed, let pausedRemaining, pausedRemaining.isFinite, pausedRemaining > 0 else { return }
         deadline = now.addingTimeInterval(pausedRemaining); self.pausedRemaining = nil
     }
     @discardableResult public mutating func expire(now: Date) -> Bool {

@@ -13,7 +13,7 @@ import ServiceManagement
     private var pending = 0
     init(root: URL) {
         do { repository = try ShelfRepository(root: root); items = repository?.items ?? [] }
-        catch { self.error = error.localizedDescription }
+        catch { self.error = AppFailure.message(error, operation: .loadTray) }
     }
     func url(_ item: ShelfItem) -> URL? { try? repository?.fileURL(for: item) }
     func importFiles(_ urls: [URL], move: Bool = false) {
@@ -25,7 +25,7 @@ import ServiceManagement
                 let scoped = url.startAccessingSecurityScopedResource()
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }
                 do { try repository.add(url, move: move); count += 1 }
-                catch { problems.append("\(url.lastPathComponent): \(error.localizedDescription)") }
+                catch { problems.append("\(url.lastPathComponent): \(AppFailure.message(error, operation: .importFile))") }
             }
             let items = repository.items
             Task { @MainActor in
@@ -41,13 +41,13 @@ import ServiceManagement
         do {
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("NotchFree-" + UUID().uuidString)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            defer { queue.async { try? FileManager.default.removeItem(at: directory) } }
             let isLink = URL(string: text).map { ["http", "https"].contains($0.scheme?.lowercased() ?? "") } ?? false
             let file = directory.appendingPathComponent(isLink ? "Link.webloc" : "Text.txt")
             let data = isLink ? try PropertyListSerialization.data(fromPropertyList: ["URL": text], format: .xml, options: 0) : Data(text.utf8)
             try data.write(to: file, options: .atomic)
             importFiles([file])
-            queue.async { try? FileManager.default.removeItem(at: directory) }
-        } catch { self.error = error.localizedDescription }
+        } catch { self.error = AppFailure.message(error, operation: .importFile) }
     }
     func paste() {
         let board = NSPasteboard.general
@@ -61,7 +61,7 @@ import ServiceManagement
                 try repository.remove(item) { file in try FileManager.default.trashItem(at: file, resultingItemURL: nil) }
                 let items = repository.items
                 Task { @MainActor in self?.items = items }
-            } catch { Task { @MainActor in self?.error = error.localizedDescription } }
+            } catch { Task { @MainActor in self?.error = AppFailure.message(error, operation: .removeFile) } }
         }
     }
 }
@@ -78,7 +78,7 @@ import ServiceManagement
     }
     func sharingService(_ sharingService: NSSharingService, didShareItems items: [Any]) { service = nil; onEnd?() }
     func sharingService(_ sharingService: NSSharingService, didFailToShareItems items: [Any], error: Error) {
-        service = nil; onEnd?(); if (error as NSError).code != NSUserCancelledError { onError?(error.localizedDescription) }
+        service = nil; onEnd?(); if (error as NSError).code != NSUserCancelledError { onError?(AppFailure.message(error, operation: .share)) }
     }
 }
 
@@ -123,7 +123,7 @@ import ServiceManagement
     var startup: Bool { SMAppService.mainApp.status == .enabled }
     init() {
         do { library = try disk.load(default: UserLibrary()); canSave = true }
-        catch { message = error.localizedDescription }
+        catch { message = AppFailure.message(error, operation: .loadLibrary) }
         selectedWidget = library.widgets.first ?? .media
         media.onTrackChanged = { [weak self] track in self?.show(Activity(title: track.title, subtitle: track.artist, symbol: "music.note", duration: 2.5)) }
         hud.onActivity = { [weak self] in self?.show($0) }
@@ -169,7 +169,7 @@ import ServiceManagement
     func airDrop(_ items: [Any]) { presentation.editing = true; share.airDrop(items) }
     func toggleStartup(_ value: Bool) {
         do { if value { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }; settingsRevision += 1 }
-        catch { message = "Launch at login: \(error.localizedDescription)" }
+        catch { message = AppFailure.message(error, operation: .startup) }
     }
     func settingsChanged() { settingsRevision += 1; requestPanel?() }
     private func scheduleSave() {
@@ -181,7 +181,7 @@ import ServiceManagement
     }
     func saveNow() {
         guard canSave else { return }
-        do { try disk.save(library) } catch { message = "Could not save: \(error.localizedDescription)" }
+        do { try disk.save(library) } catch { message = AppFailure.message(error, operation: .saveLibrary) }
     }
     func stop() {
         clock?.invalidate(); saveTask?.cancel(); saveNow()

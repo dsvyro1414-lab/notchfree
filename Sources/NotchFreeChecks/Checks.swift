@@ -43,6 +43,8 @@ import NotchFreeCore
         try expect(!empty.available, "Cleared metadata removes stale artwork and title")
         try artworkChecks()
         try panelChecks()
+        try timerInputChecks()
+        try englishChecks()
 
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("NotchFreeChecks-" + UUID().uuidString)
         let fm = FileManager.default
@@ -147,13 +149,13 @@ import NotchFreeCore
                                      compact: compact, message: message, trayError: trayError)
         }
         let opened = size()
-        try expect(opened.width == 720 && opened.height == 276, "Expanded panel retains width and removes 28 points of height")
+        try expect(opened.width == 720 && opened.height == 244, "Expanded panel retains width and removes another 32 points of height")
         try expect(size(expanded: false, compact: false).height == 35, "Idle notch height is preserved")
         try expect(size(expanded: false).width == 284, "Compact playback strip width is preserved")
         try expect(size(expanded: false, activity: true).height == 80, "Activity previews keep their existing height")
         try expect(size(width: 580).width == 580, "Shared drawing and pointer geometry clamps to a narrow display")
-        try expect(size(message: true).height == opened.height + 46, "A panel message adds room above the full widget")
-        try expect(size(trayError: true).height == opened.height + 38, "Tray errors get room without shrinking file tiles")
+        try expect(size(message: true).height == opened.height + 42, "A panel message adds room above the full widget")
+        try expect(size(trayError: true).height == opened.height + 36, "Tray errors get room without shrinking file tiles")
         try expect(size(message: true, trayError: true).height + PanelMetrics.shadowGutter == PanelMetrics.envelopeHeight(notchHeight: 32), "Both messages and shadow fit the AppKit hosting envelope")
     }
     static func tryRead(_ disk: JSONDiskStore<UserLibrary>) -> UserLibrary { (try? disk.load(default: UserLibrary())) ?? UserLibrary() }

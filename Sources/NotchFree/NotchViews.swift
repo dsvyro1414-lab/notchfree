@@ -203,7 +203,7 @@ struct NotchRootView: View {
         case .timer: TimerWidget(model: model)
         case .notes: NotesWidget(model: model)
         case .tasks: TasksWidget(model: model)
-        case .shortcuts: ShortcutsWidget(model: model, provider: model.shortcuts)
+        case .shortcuts: ShortcutsWidget(provider: model.shortcuts)
         case .mirror: MirrorWidget(camera: model.camera)
         }
     }
@@ -262,9 +262,9 @@ struct CalendarView: View {
     @Environment(\.nookAccent) private var nookAccent
     @ObservedObject var provider: CalendarProvider
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Button { provider.selectedDay = Date(); provider.refresh() } label: { Text(provider.selectedDay, format: .dateTime.month(.abbreviated)).font(.system(size: 23, weight: .semibold, design: .rounded)) }.buttonStyle(.plain)
+                Button { provider.selectedDay = Date(); provider.refresh() } label: { Text(AppEnglish.month(provider.selectedDay)).font(.system(size: 23, weight: .semibold, design: .rounded)) }.buttonStyle(.plain)
                 Spacer()
                 IconButton(symbol: "chevron.left", label: "Previous week") { shift(-7) }
                 IconButton(symbol: "chevron.right", label: "Next week") { shift(7) }
@@ -274,8 +274,8 @@ struct CalendarView: View {
                     let date = Calendar.current.date(byAdding: .day, value: offset, to: provider.selectedDay)!
                     Button { provider.selectedDay = date; provider.refresh() } label: {
                         VStack(spacing: 3) {
-                            Text(date, format: .dateTime.weekday(.narrow)).font(.system(size: 8)).foregroundStyle(.secondary)
-                            Text(date, format: .dateTime.day()).font(.system(size: 12, weight: .semibold, design: .rounded))
+                            Text(AppEnglish.weekday(date)).font(.system(size: 8)).foregroundStyle(.secondary)
+                            Text(AppEnglish.day(date)).font(.system(size: 12, weight: .semibold, design: .rounded))
                                 .foregroundStyle(offset == 0 ? Color.black : .white.opacity(0.6)).frame(width: 24, height: 24)
                                 .background(offset == 0 ? nookAccent : .clear, in: Circle())
                         }.frame(maxWidth: .infinity)
@@ -293,7 +293,7 @@ struct CalendarView: View {
                                     Capsule().fill(Color(cgColor: event.calendar.cgColor)).frame(width: 3, height: 22)
                                     Text(event.title ?? "Event").lineLimit(1)
                                     Spacer(minLength: 2)
-                                    if event.isAllDay { Text("All day") } else { Text(event.startDate, style: .time) }
+                                    if event.isAllDay { Text("All day") } else { Text(AppEnglish.time(event.startDate)) }
                                 }.font(.system(size: 10)).foregroundStyle(.white.opacity(0.65))
                             }.buttonStyle(.plain)
                         }

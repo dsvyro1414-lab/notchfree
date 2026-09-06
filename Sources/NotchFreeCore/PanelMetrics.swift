@@ -7,13 +7,13 @@ public struct PanelSize: Equatable, Sendable {
 
 /// Shared by the SwiftUI shape and AppKit pointer/drop bounds.
 public enum PanelMetrics {
-    public static let expandedHeight = 244.0
-    public static let widgetHeight = 152.0
-    public static let spacing = 12.0
-    public static let bottomPadding = 12.0
+    public static let expandedHeight = 212.0
+    public static let widgetHeight = 132.0
+    public static let spacing = 8.0
+    public static let bottomPadding = 8.0
     public static let messageHeight = 34.0
     public static let trayErrorHeight = 28.0
-    public static let traySpacing = 10.0
+    public static let traySpacing = 8.0
     public static let shadowGutter = 32.0
 
     public static func visibleSize(notchWidth: Double, notchHeight: Double,

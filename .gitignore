@@ -4,3 +4,11 @@ dist/
 .DS_Store
 *.xcuserstate
 .cache/
+
+# Local credentials must never enter source or release bundles.
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.pem
