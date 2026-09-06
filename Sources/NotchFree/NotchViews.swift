@@ -183,6 +183,7 @@ struct NotchRootView: View {
                             Image(systemName: widgetSymbol(kind)).font(.system(size: 13)).frame(width: 34, height: 28)
                                 .foregroundStyle(model.selectedWidget == kind ? nookAccent : .white.opacity(0.4))
                                 .background(model.selectedWidget == kind ? nookAccent.opacity(0.09) : .clear, in: RoundedRectangle(cornerRadius: 9))
+                                .contentShape(Rectangle())
                         }.buttonStyle(.plain).help(kind.title).accessibilityLabel(kind.title)
                     }
                     Spacer()
@@ -195,6 +196,7 @@ struct NotchRootView: View {
         Button { model.presentation.editing = false; model.camera.stop(); model.open(tab) } label: {
             Label(title, systemImage: symbol).font(.system(size: 11, weight: .semibold)).padding(.horizontal, 10).padding(.vertical, 6)
                 .background(model.presentation.tab == tab ? Color.white.opacity(0.1) : .clear, in: Capsule())
+                .contentShape(Rectangle())
         }.buttonStyle(.plain).foregroundStyle(model.presentation.tab == tab ? .white : .white.opacity(0.45))
     }
     @ViewBuilder private var widget: some View {
@@ -265,7 +267,7 @@ struct CalendarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Button { provider.selectedDay = Date(); provider.refresh() } label: { Text(AppEnglish.month(provider.selectedDay)).font(.system(size: 23, weight: .semibold, design: .rounded)) }.buttonStyle(.plain)
+                Button { provider.selectedDay = Date(); provider.refresh() } label: { Text(AppEnglish.month(provider.selectedDay)).font(.system(size: 23, weight: .semibold, design: .rounded)).contentShape(Rectangle()) }.buttonStyle(.plain)
                 Spacer()
                 IconButton(symbol: "chevron.left", label: "Previous week") { shift(-7) }
                 IconButton(symbol: "chevron.right", label: "Next week") { shift(7) }
@@ -279,7 +281,7 @@ struct CalendarView: View {
                             Text(AppEnglish.day(date)).font(.system(size: 12, weight: .semibold, design: .rounded))
                                 .foregroundStyle(offset == 0 ? Color.black : .white.opacity(0.6)).frame(width: 24, height: 24)
                                 .background(offset == 0 ? nookAccent : .clear, in: Circle())
-                        }.frame(maxWidth: .infinity)
+                        }.frame(maxWidth: .infinity).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
             }
@@ -296,6 +298,7 @@ struct CalendarView: View {
                                     Spacer(minLength: 2)
                                     if event.isAllDay { Text("All day") } else { Text(AppEnglish.time(event.startDate)) }
                                 }.font(.system(size: 10)).foregroundStyle(.white.opacity(0.65))
+                                    .contentShape(Rectangle())
                             }.buttonStyle(.plain)
                         }
                     }

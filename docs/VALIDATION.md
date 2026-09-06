@@ -56,6 +56,17 @@ The final debug and release builds passed without compiler warnings. The install
 
 Calendar/camera permission grants, active camera capture, physical hover across all displays, AirDrop delivery, and Spotify playback remain separate hardware/provider acceptance checks.
 
+### Button hit-area fix
+
+- Before the fix, two coordinate clicks in the Timer dock button's empty padding did nothing; clicking the icon switched immediately. The inactive Tray tab had the same text-versus-padding behavior.
+- Plain button labels now define their full interaction bounds after layout: Home/Tray, the widget dock, calendar day/event rows, Shortcuts cards, Settings navigation and timer controls. Timer preset padding and backgrounds now belong to the label. Appearance, layout, disabled states and panel activation policy are unchanged.
+- The installed release passed the original Timer/Tray padding clicks, both sides of several dock buttons, five consecutive Home/Tray round trips, all four timer preset edges, Start/Pause/Resume and Reset. Clicking the gap between dock buttons did not switch widgets; clicking a disabled preset did not change the running timer.
+- A click in the empty portion of a calendar day selected exactly that day. All six Settings sidebar rows responded at their empty right edges. The coordinate driver for the centered Settings window was calibrated against a temporary native event trace; that instrumentation was removed before the final build.
+- Invalid timer input disabled Start; Escape restored the draft, Tab moved between fields, Return confirmed without starting, and Escape then closed the panel. The original ready 50-minute timer and today's calendar selection were restored.
+- All 114 deterministic checks passed. Final debug/release builds completed without compiler warnings; the installed release passed strict signature verification and its executable UUID `56AB6FC8-959D-3347-9D2F-B38D10819AB0` matched the release build. There are no new core checks for this change: the regression is in native hit testing, not the Foundation state model.
+- Cleanup moved the obsolete README preview, layout fixtures and four old root-level build logs to Trash. The preview's documentation symlink was not followed. Build caches, the pre-validation timer backup, security tools, documentation assets, licenses and vendored sources were retained. Temporary click diagnostics were removed from source and local outputs.
+- The user confirmed that, with another app active, hovering over the notch and clicking the empty edge of Timer or Tray switches on the first click. This is user-confirmed on this Mac; other displays and macOS versions remain separate acceptance checks. Calendar permission-dependent event actions and execution of user Shortcuts were not exercised by this pass.
+
 ## Hardware acceptance checklist
 
 Complete these on each supported macOS/hardware combination before calling it a stable release:

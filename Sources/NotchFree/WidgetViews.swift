@@ -75,6 +75,7 @@ struct ShortcutsWidget: View {
                         Button { provider.run(name) } label: {
                             HStack { Image(systemName: provider.running == name ? "hourglass" : "bolt.fill").foregroundStyle(nookAccent); Text(name).lineLimit(1); Spacer() }
                                 .font(.system(size: 11)).padding(12).background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+                                .contentShape(Rectangle())
                         }.buttonStyle(.plain).disabled(provider.running != nil)
                     }
                 }

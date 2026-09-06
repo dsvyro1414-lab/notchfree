@@ -38,13 +38,16 @@ struct TimerWidget: View {
                 .accessibilityValue("\(Int(timer.progress(at: model.now) * 100)) percent")
             HStack(spacing: 6) {
                 ForEach([5, 15, 25, 50], id: \.self) { minutes in
-                    Button("\(minutes) min") {
+                    Button {
                         discardDraft()
                         model.library.timer.configure(seconds: Double(minutes * 60))
                         model.saveNow(); model.feedback()
-                    }.buttonStyle(.plain).font(.system(size: 11, weight: .medium))
-                        .padding(.horizontal, 9).frame(height: 28)
-                        .background(.white.opacity(timer.duration == Double(minutes * 60) ? 0.13 : 0.055), in: Capsule())
+                    } label: {
+                        Text("\(minutes) min").font(.system(size: 11, weight: .medium))
+                            .padding(.horizontal, 9).frame(height: 28)
+                            .background(.white.opacity(timer.duration == Double(minutes * 60) ? 0.13 : 0.055), in: Capsule())
+                            .contentShape(Rectangle())
+                    }.buttonStyle(.plain)
                         .disabled(!canEdit).accessibilityLabel("Set timer to \(minutes) minutes")
                 }
                 Spacer(minLength: 8)
@@ -59,6 +62,7 @@ struct TimerWidget: View {
                     Label(primaryTitle, systemImage: timer.isRunning ? "pause.fill" : "play.fill")
                         .font(.system(size: 11, weight: .semibold)).frame(width: 96, height: 28)
                         .foregroundStyle(.black).background(accent, in: Capsule())
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain).disabled(!valid).opacity(valid ? 1 : 0.4)
             }.frame(height: 28)
         }.padding(.horizontal, 14).frame(height: PanelMetrics.widgetHeight)

@@ -31,6 +31,7 @@ struct SettingsView: View {
                         }.font(.system(size: 12, weight: page == item ? .semibold : .regular))
                             .padding(10).background(page == item ? .white.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 9))
                             .foregroundStyle(page == item ? .white : .white.opacity(0.5))
+                            .contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
                 Spacer()
