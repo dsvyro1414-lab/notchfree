@@ -90,6 +90,7 @@ struct NotchRootView: View {
     var size: PanelSize { model.panelSize(geometry: geometry, availableWidth: availableWidth - PanelMetrics.shadowGutter) }
     var width: CGFloat { size.width }
     var height: CGFloat { size.height }
+    private var panelShape: NotchShape { NotchShape(radius: expanded ? 48 : 13) }
     var motion: Animation { reduced ? .easeOut(duration: 0.12) : .spring(response: expanded ? 0.4 : 0.3, dampingFraction: 0.82) }
     var body: some View {
         VStack(spacing: 0) {
@@ -118,9 +119,9 @@ struct NotchRootView: View {
             }
         }
         .frame(width: width, height: height, alignment: .top)
-        .background { NotchShape(radius: expanded ? 30 : 13).fill(.black) }
-        .overlay { NotchShape(radius: expanded ? 30 : 13).stroke(model.presentation.dragging ? nookAccent : .clear, lineWidth: 1.5) }
-        .clipShape(NotchShape(radius: expanded ? 30 : 13))
+        .background { panelShape.fill(.black) }
+        .overlay { panelShape.stroke(model.presentation.dragging ? nookAccent : .clear, lineWidth: 1.5) }
+        .clipShape(panelShape)
         .shadow(color: .black.opacity(expanded ? 0.32 : 0.1), radius: expanded ? 18 : 5, y: 7)
         .animation(motion, value: expanded).animation(motion, value: width).animation(motion, value: height)
         .animation(.easeOut(duration: 0.2), value: model.presentation.tab)
@@ -186,7 +187,7 @@ struct NotchRootView: View {
                     }
                     Spacer()
                     Text("A little more space.").font(.system(size: 10)).foregroundStyle(.white.opacity(0.25))
-                }
+                }.padding(.horizontal, PanelMetrics.footerHorizontalPadding)
             }
         }
     }

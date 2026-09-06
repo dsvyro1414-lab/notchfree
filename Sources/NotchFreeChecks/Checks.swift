@@ -154,8 +154,8 @@ import NotchFreeCore
         try expect(size(expanded: false).width == 284, "Compact playback strip width is preserved")
         try expect(size(expanded: false, activity: true).height == 80, "Activity previews keep their existing height")
         try expect(size(width: 580).width == 580, "Shared drawing and pointer geometry clamps to a narrow display")
-        try expect(size(message: true).height == opened.height + 42, "A panel message adds room above the full widget")
-        try expect(size(trayError: true).height == opened.height + 36, "Tray errors get room without shrinking file tiles")
+        try expect(size(message: true).height == opened.height + 40, "A panel message adds room above the full widget")
+        try expect(size(trayError: true).height == opened.height + 34, "Tray errors get room without shrinking file tiles")
         try expect(size(message: true, trayError: true).height + PanelMetrics.shadowGutter == PanelMetrics.envelopeHeight(notchHeight: 32), "Both messages and shadow fit the AppKit hosting envelope")
     }
     static func tryRead(_ disk: JSONDiskStore<UserLibrary>) -> UserLibrary { (try? disk.load(default: UserLibrary())) ?? UserLibrary() }

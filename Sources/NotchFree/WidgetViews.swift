@@ -173,7 +173,7 @@ struct TrayView: View {
                         else { model.airDrop([text]) }
                     }
                 } } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton).frame(width: 18)
-            }
+            }.padding(.horizontal, PanelMetrics.footerHorizontalPadding)
         }.onChange(of: shelf.items) { _, values in selection.formIntersection(Set(values.map(\.id))) }
     }
 }

@@ -9,11 +9,12 @@ public struct PanelSize: Equatable, Sendable {
 public enum PanelMetrics {
     public static let expandedHeight = 212.0
     public static let widgetHeight = 132.0
-    public static let spacing = 8.0
-    public static let bottomPadding = 8.0
+    public static let spacing = 6.0
+    public static let bottomPadding = 12.0
+    public static let footerHorizontalPadding = 8.0
     public static let messageHeight = 34.0
     public static let trayErrorHeight = 28.0
-    public static let traySpacing = 8.0
+    public static let traySpacing = 6.0
     public static let shadowGutter = 32.0
 
     public static func visibleSize(notchWidth: Double, notchHeight: Double,
