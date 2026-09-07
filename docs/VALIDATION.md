@@ -75,6 +75,11 @@ Calendar/camera permission grants, active camera capture, physical hover across 
 - `open` now requests haptics only when transitioning from collapsed to expanded. Tab switches and repeated presses on the selected tab do not request an extra haptic pulse. The haptic preference and other feedback paths are unchanged.
 - All 114 checks and debug/release builds passed. The installed release passed strict signature verification and matched executable UUID `639D545C-142E-3BFC-A136-5E22F7EEE20B`. Three coordinate-driven Home/Tray cycles, including repeated presses on the selected Tray tab, preserved correct navigation and the full button hit areas. These UI checks establish navigation behavior; they do not measure the physical trackpad sensation.
 
+### Direct player polling
+
+- Direct Apple Music/Spotify integrations now wait one second between metadata requests while the selected player is running; the closed-player check retains its two-second wait. System Now Playing streaming and the progress display cadence are unchanged.
+- All 114 checks and debug/release builds passed. The installed release passed strict signature verification and matched executable UUID `86D9EB2F-7708-3C3C-883A-80E327E2800B`. Its panel opened and displayed the expected Apple Music launch prompt with the player closed. Active playback latency and battery impact were not measured in this pass.
+
 ## Hardware acceptance checklist
 
 Complete these on each supported macOS/hardware combination before calling it a stable release:

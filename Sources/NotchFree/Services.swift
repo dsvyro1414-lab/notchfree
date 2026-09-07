@@ -135,7 +135,8 @@ enum CommandRunner {
         poll = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.generation == token else { return }
-                if NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty {
+                let playerRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty
+                if !playerRunning {
                     self.receive(MediaSnapshot()); self.status = "Open \(selectedSource.rawValue) to start listening."
                 } else {
                     do {
@@ -150,7 +151,7 @@ enum CommandRunner {
                         self.status = "Automation access unavailable. Enable it in System Settings."
                     }
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                try? await Task.sleep(nanoseconds: playerRunning ? 1_000_000_000 : 2_000_000_000)
             }
         }
     }

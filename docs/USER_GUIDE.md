@@ -53,6 +53,8 @@ Select **Apple Music** or **Spotify** in Settings → Media for direct Automatio
 
 Direct Music and Spotify modes load album artwork for both the player and the compact strip. Covers stay in place during pause/seek and update when the track changes. Missing artwork is retried; tracks without a cover keep the music-note placeholder.
 
+Direct integrations wait one second between playback checks while the selected player is running, or two seconds while it is closed. The system Now Playing integration receives updates directly.
+
 ### Files and AirDrop
 
 Drop files or folders onto the notch, add them with **+**, or use **Paste**. The tray keeps its own copies across restarts; your original files stay in place. Hold **Option while dropping**, when the source supports moving, to move instead of copy.
