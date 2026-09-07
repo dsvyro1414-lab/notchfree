@@ -13,20 +13,26 @@ struct ScreenGeometry {
     var width: CGFloat
     var height: CGFloat
     var center: CGFloat
+    var hasPhysicalNotch: Bool
     init(_ screen: NSScreen) {
         height = max(26, screen.safeAreaInsets.top)
         if screen.safeAreaInsets.top > 0, let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea {
+            hasPhysicalNotch = true
             width = right.minX - left.maxX; center = (left.maxX + right.minX) / 2
-        } else { width = 180; center = screen.frame.midX }
+        } else { hasPhysicalNotch = false; width = 180; center = screen.frame.midX }
     }
 }
 
 extension AppModel {
+    var showsMiniPlayer: Bool { library.widgets.contains(.media) }
+    var hasCompactContent: Bool {
+        showsMiniPlayer || media.snapshot.available || library.timer.isRunning || !shelf.items.isEmpty
+    }
     func panelSize(geometry: ScreenGeometry, availableWidth: CGFloat) -> PanelSize {
         PanelMetrics.visibleSize(notchWidth: geometry.width, notchHeight: geometry.height,
                                  panelWidth: panelWidth, availableWidth: min(panelWidth, availableWidth),
                                  expanded: presentation.expanded, activity: presentation.visibleActivity != nil,
-                                 compact: media.snapshot.available || library.timer.isRunning || !shelf.items.isEmpty,
+                                 compact: hasCompactContent,
                                  message: message != nil, trayError: presentation.tab == .tray && shelf.error != nil)
     }
 }

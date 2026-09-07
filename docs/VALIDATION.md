@@ -81,6 +81,13 @@ Calendar/camera permission grants, active camera capture, physical hover across 
 - All 114 checks and debug/release builds passed. The installed release passed strict signature verification and matched executable UUID `86D9EB2F-7708-3C3C-883A-80E327E2800B`. Its panel opened and displayed the expected Apple Music launch prompt with the player closed. Active playback latency and battery impact were not measured in this pass.
 - A follow-up reduced the running-player wait to 0.5 seconds. Requests remain sequential, so the actual interval also includes request time. All 114 checks and debug/release builds passed again; the installed release passed strict signature verification and matched executable UUID `491C9DB2-B644-30A4-BE36-03E012E74865`. No new active-playback latency or battery measurements were made.
 
+### Physical notch and persistent mini-player
+
+- The built-in display reported a 185 × 32 pt camera exclusion area at 2× scale. The old empty silhouette narrowed its vertical sides by 12 pt each and extended 3 pt below that area. An initial installed fix removed the empty shape and shadow; the user confirmed the unwanted edge disappeared and hover opening worked.
+- At the user's follow-up request, enabling Media now keeps the compact strip visible, including a placeholder cover and Open player button without a track. The strip remains notch width + 104 pt (289 × 35 pt on this display); controls reserve the full reported notch width. The cover toggles the panel, and the separate right button controls an available track or opens Media. Media-disabled, empty state retains the transparent fix on notched displays; displays without a notch retain their fallback surface.
+- All 114 checks and debug/release builds passed. The installed final release passed strict signature verification and matched executable UUID `1FFA21C2-8646-3692-90AC-16BA31F17990`. Its collapsed screenshot showed both controls outside the camera exclusion area. A coordinate click on the right button's empty edge opened Media, and closing restored the compact strip. The original ready 01:40:00 timer and selected Timer widget were preserved.
+- Playback through the new compact transport button, the Media-disabled fallback, and external-display rendering were not exercised in this pass. The existing provider commands and expanded layout are unchanged.
+
 ## Hardware acceptance checklist
 
 Complete these on each supported macOS/hardware combination before calling it a stable release:

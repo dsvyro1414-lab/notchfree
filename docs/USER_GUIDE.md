@@ -47,6 +47,8 @@ Ad-hoc signing is local code signing, **not** Apple notarization. macOS privacy 
 
 ### Music
 
+With the Media widget enabled, the collapsed panel keeps a mini-player visible on both sides of the camera housing. Click the cover to toggle the panel; the right button pauses/resumes an available track, or opens the Media widget when no track is available. Timer and tray indicators still appear when there is no track and they have content. With Media disabled and no compact content, a notched display uses the physical cutout alone, without an extra black shape or shadow.
+
 **Now Playing** follows the active system media session. The player shows available artwork, title, artist, transport controls and a seek bar when duration is available. Browser playback works only when the browser/player publishes a system Now Playing session.
 
 Select **Apple Music** or **Spotify** in Settings → Media for direct Automation-based integration. Open the chosen player first, then allow the macOS Automation prompt. Playback bars are an animated play/pause indicator, not a recording or frequency analysis of system audio.

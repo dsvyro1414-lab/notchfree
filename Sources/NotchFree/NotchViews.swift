@@ -90,6 +90,8 @@ struct NotchRootView: View {
     var size: PanelSize { model.panelSize(geometry: geometry, availableWidth: availableWidth - PanelMetrics.shadowGutter) }
     var width: CGFloat { size.width }
     var height: CGFloat { size.height }
+    // The hardware cutout supplies the idle silhouette; drawing another one leaves a visible seam.
+    private var showsSurface: Bool { !geometry.hasPhysicalNotch || expanded || activity != nil || model.hasCompactContent }
     private var panelShape: NotchShape { NotchShape(radius: expanded ? 48 : 13) }
     var motion: Animation { reduced ? .easeOut(duration: 0.12) : .spring(response: expanded ? 0.4 : 0.3, dampingFraction: 0.82) }
     var body: some View {
@@ -119,10 +121,10 @@ struct NotchRootView: View {
             }
         }
         .frame(width: width, height: height, alignment: .top)
-        .background { panelShape.fill(.black) }
+        .background { panelShape.fill(showsSurface ? .black : .clear) }
         .overlay { panelShape.stroke(model.presentation.dragging ? nookAccent : .clear, lineWidth: 1.5) }
         .clipShape(panelShape)
-        .shadow(color: .black.opacity(expanded ? 0.32 : 0.1), radius: expanded ? 18 : 5, y: 7)
+        .shadow(color: .black.opacity(showsSurface ? (expanded ? 0.32 : 0.1) : 0), radius: expanded ? 18 : 5, y: 7)
         .animation(motion, value: expanded).animation(motion, value: width).animation(motion, value: height)
         .animation(.easeOut(duration: 0.2), value: model.presentation.tab)
         .foregroundStyle(.white).preferredColorScheme(.dark)
@@ -130,21 +132,37 @@ struct NotchRootView: View {
     }
     private var topStrip: some View {
         HStack(spacing: 0) {
-            Group {
-                if let activity { Image(systemName: activity.symbol).foregroundStyle(nookAccent).font(.system(size: 13, weight: .semibold)) }
-                else if media.snapshot.available { AlbumArt(data: media.snapshot.artwork, size: 22) }
-                else if model.library.timer.isRunning { Image(systemName: "timer").foregroundStyle(nookAccent) }
-                else if !shelf.items.isEmpty { Image(systemName: "tray.fill").foregroundStyle(nookAccent) }
-            }.frame(maxWidth: .infinity)
-            Color.clear.frame(width: geometry.width - 20)
-            Group {
-                if media.snapshot.available { PlaybackBars(playing: media.snapshot.playing) }
-                else if model.library.timer.isRunning { Text(timeString(model.library.timer.remaining(at: model.now))).font(.system(size: 10, weight: .medium, design: .monospaced)).foregroundStyle(nookAccent) }
-                else if !shelf.items.isEmpty { Text("\(shelf.items.count)").font(.system(size: 11, weight: .semibold)) }
-            }.frame(maxWidth: .infinity)
-        }.padding(.horizontal, 20).contentShape(Rectangle())
-            .onTapGesture { if expanded { model.close(force: true) } else { model.open() } }
-            .accessibilityLabel("Toggle NotchFree")
+            Button(action: togglePanel) {
+                Group {
+                    if let activity { Image(systemName: activity.symbol).foregroundStyle(nookAccent).font(.system(size: 13, weight: .semibold)) }
+                    else if media.snapshot.available { AlbumArt(data: media.snapshot.artwork, size: 22) }
+                    else if model.library.timer.isRunning { Image(systemName: "timer").foregroundStyle(nookAccent) }
+                    else if !shelf.items.isEmpty { Image(systemName: "tray.fill").foregroundStyle(nookAccent) }
+                    else if model.showsMiniPlayer { AlbumArt(data: nil, size: 22) }
+                }.frame(maxWidth: .infinity).frame(height: geometry.height).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel("Toggle NotchFree")
+            // Keep both controls entirely outside the physical camera housing.
+            Color.clear.frame(width: geometry.width).contentShape(Rectangle()).onTapGesture(perform: togglePanel)
+            Button {
+                if media.snapshot.available { media.send(2) }
+                else if idlePlayer { model.selectWidget(.media); model.open() }
+                else { togglePanel() }
+            } label: {
+                Group {
+                    if media.snapshot.available && media.snapshot.playing { PlaybackBars(playing: true) }
+                    else if media.snapshot.available || idlePlayer { Image(systemName: "play.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(nookAccent) }
+                    else if model.library.timer.isRunning { Text(timeString(model.library.timer.remaining(at: model.now))).font(.system(size: 10, weight: .medium, design: .monospaced)).foregroundStyle(nookAccent) }
+                    else if !shelf.items.isEmpty { Text("\(shelf.items.count)").font(.system(size: 11, weight: .semibold)) }
+                }.frame(maxWidth: .infinity).frame(height: geometry.height).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityLabel(stripActionLabel).help(stripActionLabel)
+        }.padding(.horizontal, 20)
+    }
+    private var idlePlayer: Bool { model.showsMiniPlayer && !model.library.timer.isRunning && shelf.items.isEmpty }
+    private var stripActionLabel: String {
+        media.snapshot.available ? (media.snapshot.playing ? "Pause" : "Play") : idlePlayer ? "Open player" : "Toggle NotchFree"
+    }
+    private func togglePanel() {
+        if expanded { model.close(force: true) } else { model.open() }
     }
     private var expandedContent: some View {
         VStack(spacing: PanelMetrics.spacing) {
