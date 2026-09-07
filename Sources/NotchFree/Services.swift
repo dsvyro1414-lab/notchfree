@@ -151,7 +151,7 @@ enum CommandRunner {
                         self.status = "Automation access unavailable. Enable it in System Settings."
                     }
                 }
-                try? await Task.sleep(nanoseconds: playerRunning ? 1_000_000_000 : 2_000_000_000)
+                try? await Task.sleep(nanoseconds: playerRunning ? 500_000_000 : 2_000_000_000)
             }
         }
     }

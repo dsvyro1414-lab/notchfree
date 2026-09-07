@@ -77,8 +77,9 @@ Calendar/camera permission grants, active camera capture, physical hover across 
 
 ### Direct player polling
 
-- Direct Apple Music/Spotify integrations now wait one second between metadata requests while the selected player is running; the closed-player check retains its two-second wait. System Now Playing streaming and the progress display cadence are unchanged.
+- Direct Apple Music/Spotify integrations initially changed to a one-second wait between metadata requests while the selected player is running; the closed-player check retains its two-second wait. System Now Playing streaming and the progress display cadence are unchanged.
 - All 114 checks and debug/release builds passed. The installed release passed strict signature verification and matched executable UUID `86D9EB2F-7708-3C3C-883A-80E327E2800B`. Its panel opened and displayed the expected Apple Music launch prompt with the player closed. Active playback latency and battery impact were not measured in this pass.
+- A follow-up reduced the running-player wait to 0.5 seconds. Requests remain sequential, so the actual interval also includes request time. All 114 checks and debug/release builds passed again; the installed release passed strict signature verification and matched executable UUID `491C9DB2-B644-30A4-BE36-03E012E74865`. No new active-playback latency or battery measurements were made.
 
 ## Hardware acceptance checklist
 
