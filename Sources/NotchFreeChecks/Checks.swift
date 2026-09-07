@@ -78,6 +78,26 @@ import NotchFreeCore
         try tray.remove(first) { try fm.moveItem(at: $0, to: root.appendingPathComponent("Recycled.txt")) }
         try expect(fm.fileExists(atPath: source.path), "Removing a tray copy preserves its source")
         try expect(tray.items.count == 1, "Successful removal updates manifest")
+        try expect(!fm.fileExists(atPath: firstURL.deletingLastPathComponent().path), "Removing a tray item clears its empty container")
+        let secondURL = try tray.fileURL(for: second)
+        let sibling = secondURL.deletingLastPathComponent().appendingPathComponent("Keep.txt")
+        try Data("keep".utf8).write(to: sibling)
+        try tray.remove(second) { try fm.removeItem(at: $0) }
+        try expect(fm.fileExists(atPath: sibling.path), "Container cleanup preserves unexpected sibling files")
+
+        let failedRoot = root.appendingPathComponent("FailedTray")
+        let failedTray = try ShelfRepository(root: failedRoot)
+        // A directory at the index path forces a real manifest-write failure.
+        try fm.createDirectory(at: failedRoot.appendingPathComponent("index.json"), withIntermediateDirectories: true)
+        for move in [false, true] {
+            do { _ = try failedTray.add(source, move: move); try expect(false, "Failed manifest write must throw") }
+            catch {
+                try expect(try Data(contentsOf: source) == Data("precious".utf8), "Failed import preserves source bytes (move: \(move))")
+                try expect(failedTray.items.isEmpty, "Failed import preserves the manifest (move: \(move))")
+                try expect(try fm.contentsOfDirectory(atPath: failedRoot.appendingPathComponent("Files").path).isEmpty,
+                           "Failed import clears its empty container (move: \(move))")
+            }
+        }
         let malicious = ShelfItem(id: UUID(), name: "escape", relativePath: "../../Original.txt")
         do { _ = try tray.fileURL(for: malicious); try expect(false, "Traversal must fail") }
         catch { try expect(true, "Manifest traversal cannot escape managed storage") }

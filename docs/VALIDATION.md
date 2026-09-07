@@ -4,7 +4,7 @@ This is a source alpha. Keep observed behavior separate from integrations that a
 
 ## Automated checks
 
-Run `./scripts/check.sh`. The 114 deterministic checks exercise:
+Run `./scripts/check.sh`. The 122 deterministic checks exercise:
 
 - Presentation priority, editor/drag locks, dismissal and repeated expansion cycles.
 - Timer input boundaries, presets, motivational states, pause/edit/resume/reset, legacy persistence, expiry after elapsed time and one-time completion.
@@ -14,8 +14,17 @@ Run `./scripts/check.sh`. The 114 deterministic checks exercise:
 - Shared panel geometry, compact/activity sizes, narrow screens and room for simultaneous messages.
 - Atomic library persistence, backup recovery and preservation of corrupt files.
 - Real file copies, duplicate names, restart persistence, removal failure, explicit moves and path traversal/recursive import rejection.
+- Empty tray-container cleanup after removal and failed imports, with source bytes and unexpected sibling files preserved.
 
 These are Foundation-based executable checks, not XCTest. The GitHub workflow runs the same checks and builds/signature-verifies the app; a workflow file alone is not a successful CI run.
+
+## Cleanup audit — 7 September 2026
+
+- All 122 checks passed, including removal of empty tray containers, preservation of unexpected sibling files, and source/manifest recovery after failed copy and move imports.
+- The release build and installed app passed strict signature verification. Executable UUIDs matched: `478AB542-B0C9-3072-B3AD-4291B387C70D`. The installed panel opened and switched to Tray successfully.
+- Gitleaks 8.30.1 reported no secrets in the working tree, all local Git refs, or the installed bundle. This is a scanner result, not a guarantee that every possible secret format is detectable.
+- Removed unused upstream editor settings, an empty submodule manifest, and badge-maintenance tooling. Kept the adapter's runtime source, CMake build, test client, attribution, and license.
+- Removed three empty, unreferenced tray containers and one empty file-promise temporary directory on the validation Mac. Application preferences and user content were preserved.
 
 ## Local observations — 6 September 2026
 

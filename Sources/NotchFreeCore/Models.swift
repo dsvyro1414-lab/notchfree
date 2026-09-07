@@ -172,6 +172,7 @@ public final class ShelfRepository: @unchecked Sendable {
             throw StoreError.invalidPath
         }
         try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        defer { removeEmptyContainer(for: item) }
         if move { try fm.moveItem(at: source, to: target) } else { try fm.copyItem(at: source, to: target) }
         do {
             try disk.save(items + [item]); storedItems.append(item)
@@ -187,6 +188,18 @@ public final class ShelfRepository: @unchecked Sendable {
         if FileManager.default.fileExists(atPath: file.path) { try recycle(file) }
         let updated = items.filter { $0.id != item.id }
         try disk.save(updated); storedItems = updated
+        removeEmptyContainer(for: item)
+    }
+    private func removeEmptyContainer(for item: ShelfItem) {
+        guard let file = try? fileURL(for: item) else { return }
+        let directory = file.deletingLastPathComponent()
+        let files = root.appendingPathComponent("Files", isDirectory: true).standardizedFileURL
+        // Only discard this item's empty UUID container, never the tray root or siblings.
+        guard directory.lastPathComponent == item.id.uuidString,
+              directory.deletingLastPathComponent().standardizedFileURL == files,
+              let contents = try? FileManager.default.contentsOfDirectory(atPath: directory.path),
+              contents.isEmpty else { return }
+        try? FileManager.default.removeItem(at: directory)
     }
 }
 

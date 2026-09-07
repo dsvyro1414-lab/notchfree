@@ -174,7 +174,7 @@ NotchFree is a small native codebase with a Foundation-only core and focused sys
 | :--- | :--- |
 | [`Sources/NotchFree`](Sources/NotchFree) | SwiftUI interface, AppKit panel, media and system integrations |
 | [`Sources/NotchFreeCore`](Sources/NotchFreeCore) | State, persistence, timer, panel geometry and media decoding |
-| [`Sources/NotchFreeChecks`](Sources/NotchFreeChecks) | 114 deterministic state, storage and file-operation checks |
+| [`Sources/NotchFreeChecks`](Sources/NotchFreeChecks) | 122 deterministic state, storage and file-operation checks |
 | [`Vendor/MediaRemoteAdapter`](Vendor/MediaRemoteAdapter) | Pinned Objective-C source for system Now Playing |
 
 ```sh
