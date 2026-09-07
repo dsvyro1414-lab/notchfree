@@ -67,6 +67,14 @@ Calendar/camera permission grants, active camera capture, physical hover across 
 - Cleanup moved the obsolete README preview, layout fixtures and four old root-level build logs to Trash. The preview's documentation symlink was not followed. Build caches, the pre-validation timer backup, security tools, documentation assets, licenses and vendored sources were retained. Temporary click diagnostics were removed from source and local outputs.
 - The user confirmed that, with another app active, hovering over the notch and clicking the empty edge of Timer or Tray switches on the first click. This is user-confirmed on this Mac; other displays and macOS versions remain separate acceptance checks. Calendar permission-dependent event actions and execution of user Shortcuts were not exercised by this pass.
 
+## Local observations — 7 September 2026
+
+### Tab haptic feedback
+
+- The user reported a second trackpad click when pressing Home/Tray. Both buttons called `AppModel.open`, which requested alignment haptics even when the panel was already expanded.
+- `open` now requests haptics only when transitioning from collapsed to expanded. Tab switches and repeated presses on the selected tab do not request an extra haptic pulse. The haptic preference and other feedback paths are unchanged.
+- All 114 checks and debug/release builds passed. The installed release passed strict signature verification and matched executable UUID `639D545C-142E-3BFC-A136-5E22F7EEE20B`. Three coordinate-driven Home/Tray cycles, including repeated presses on the selected Tray tab, preserved correct navigation and the full button hit areas. These UI checks establish navigation behavior; they do not measure the physical trackpad sensation.
+
 ## Hardware acceptance checklist
 
 Complete these on each supported macOS/hardware combination before calling it a stable release:

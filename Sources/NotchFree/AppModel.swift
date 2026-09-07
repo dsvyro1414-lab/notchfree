@@ -154,7 +154,13 @@ import ServiceManagement
             show(Activity(title: event.title ?? "Upcoming event", subtitle: "In \(max(1, Int(event.startDate.timeIntervalSince(now) / 60))) min", symbol: "calendar", duration: 5))
         }
     }
-    func open(_ tab: PanelTab = .home) { presentation.open(tab); feedback(); requestPanel?() }
+    func open(_ tab: PanelTab = .home) {
+        let wasExpanded = presentation.expanded
+        presentation.open(tab)
+        // Switching tabs in an open panel must not add a second trackpad click.
+        if !wasExpanded { feedback() }
+        requestPanel?()
+    }
     func close(force: Bool = false) {
         presentation.close(force: force)
         if !presentation.expanded { camera.stop(); saveNow() }
